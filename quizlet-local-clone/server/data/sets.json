@@ -1,0 +1,34 @@
+{
+  "sets": [
+    {
+      "title": "chat",
+      "description": "sdfsqdq qsdfq",
+      "cards": [
+        {
+          "term": "vache",
+          "definition": "mouton"
+        },
+        {
+          "term": "agneau ",
+          "definition": "poulet"
+        }
+      ],
+      "id": "KjiQSaEEmDdD7AtfzX85s"
+    },
+    {
+      "title": "dsd",
+      "description": "",
+      "cards": [
+        {
+          "term": "sdds",
+          "definition": "dsds"
+        },
+        {
+          "term": "ds",
+          "definition": "dsds"
+        }
+      ],
+      "id": "IWsoIE3mT3mipCy_2-nAs"
+    }
+  ]
+}

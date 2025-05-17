@@ -1,0 +1,68 @@
+:root {
+  /* Couleurs Quizlet-like dark */
+  --q-bg: #181B3A;
+  --q-bg-card: #23244a;
+  --q-sidebar: #23244a;
+  --q-primary: #6c63ff;
+  --q-accent: #ffca3a;
+  --q-text: #e7eaf1;
+  --q-text-light: #b3b6d4;
+  --q-btn: #393b6a;
+  --q-btn-hover: #5054a6;
+  --q-border: #282a52;
+  --q-success: #68d391;
+  --q-error: #fc8181;
+  --q-shadow: 0 2px 12px #23244a80;
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+}
+
+body {
+  margin: 0;
+  background: var(--q-bg);
+  color: var(--q-text);
+}
+
+a {
+  color: var(--q-primary);
+  text-decoration: none;
+}
+
+button {
+  background: var(--q-btn);
+  color: var(--q-text);
+  border: none;
+  border-radius: 8px;
+  padding: 0.55em 1.4em;
+  font-size: 1em;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-family: inherit;
+  margin: 0.2em;
+}
+
+button:hover {
+  background: var(--q-btn-hover);
+}
+
+input, select, textarea {
+  background: var(--q-bg-card);
+  color: var(--q-text);
+  border: 1px solid var(--q-border);
+  border-radius: 6px;
+  padding: 0.4em 0.6em;
+  font-family: inherit;
+}
+
+::-webkit-scrollbar {
+  background: var(--q-bg);
+  width: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--q-sidebar);
+}
+
+@media (max-width: 700px) {
+  .container {
+    padding: 0 5vw;
+  }
+}
