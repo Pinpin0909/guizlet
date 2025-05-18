@@ -53,7 +53,7 @@ Clone local de Quizlet : une application web éducative pour apprendre avec des 
    ```bash
    npm install
 
-3. **executé le racourci bureau**
+3. **Executé le racourci bureau**
 
 ## Structure du projet
 
