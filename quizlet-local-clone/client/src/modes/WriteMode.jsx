@@ -12,7 +12,19 @@ export default function WriteMode() {
   const [error, setError] = useState(false)
 
   useEffect(() => {
-    axios.get(`/api/sets/${id}`).then(r => setCards(r.data.cards || []))
+    axios.get(`/api/sets/${id}`).then(r => {
+      // Migration image -> imageFront/imageBack, compatibilité & exclusion des cartes sans texte
+      const filtered = (r.data.cards || [])
+        .map(card => ({
+          ...card,
+          imageFront: card.imageFront ?? card.image ?? "",
+          imageBack: card.imageBack ?? "",
+          term: card.term ?? card.question ?? "",
+          definition: card.definition ?? card.reponse ?? "",
+        }))
+        .filter(card => !!card.term || !!card.imageFront); // on garde les cartes avec au moins texte ou image sur la face avant
+      setCards(filtered)
+    })
   }, [id])
 
   if (!cards.length) return <div>Chargement…</div>
@@ -50,8 +62,7 @@ export default function WriteMode() {
 
   const handleSubmit = e => {
     e.preventDefault()
-    // Support both {term, definition} and {question, reponse}
-    const answer = (card.definition || card.reponse || "").trim().toLowerCase()
+    const answer = (card.definition || "").trim().toLowerCase()
     if (input.trim().toLowerCase() === answer) {
       setScore(score + 1)
       setError(false)
@@ -104,7 +115,21 @@ export default function WriteMode() {
         transition: "background 0.2s"
       }}>
         <div style={{ fontSize: 22, marginBottom: 18, color: "#b3baff" }}>
-          {card.term || card.question}
+          {/* Affiche imageFront si elle existe, puis texte */}
+          {card.imageFront && (
+            <img
+              src={card.imageFront}
+              alt=""
+              style={{
+                maxHeight: 110,
+                maxWidth: 320,
+                margin: "0 auto 10px auto",
+                borderRadius: 10,
+                boxShadow: "0 2px 8px #2224"
+              }}
+            />
+          )}
+          {card.term}
         </div>
         <form onSubmit={handleSubmit} style={{display: "flex", alignItems: "center", gap: 10}}>
           <input
@@ -137,6 +162,7 @@ export default function WriteMode() {
           }}>Valider</button>
         </form>
         {error && <div style={{ color: '#f56565', marginTop: 8 }}>Mauvaise réponse !</div>}
+        {/* Affichage imageBack et la définition si tu veux aussi montrer la "solution" en cas d'erreur, tu peux l'ajouter ici */}
       </div>
       <div style={{
         display: "flex",

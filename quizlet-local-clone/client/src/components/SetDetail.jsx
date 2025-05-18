@@ -19,33 +19,28 @@ export default function SetDetail() {
     axios.get(`/api/sets/${id}`).then(r => setSet(r.data))
   }, [id])
 
-  // Charge toutes les listes de l'utilisateur pour la dropdown dans la sidebar
   useEffect(() => {
     axios.get(`/api/sets`).then(r => setUserSets(r.data || []))
   }, [])
 
-  // Remet la carte côté mot quand tu changes de carte
   useEffect(() => {
     setFlipped(false)
   }, [current])
 
-  // Met à jour le selectedSet si id change (naviguer via bouton "préc/suiv")
   useEffect(() => {
     setSelectedSet(id)
   }, [id])
 
-  // Si selectedSet change (par sélection), navigue vers la liste correspondante
   useEffect(() => {
     if (selectedSet && selectedSet !== id) {
       navigate(`/sets/${selectedSet}`)
     }
   }, [selectedSet, id, navigate])
 
-  // Fonction pour lire un texte (mot ou définition) à voix haute
   function playAudio(text) {
     if ('speechSynthesis' in window && text) {
       const synth = window.speechSynthesis
-      synth.cancel(); // stop previous if needed
+      synth.cancel()
       const utter = new window.SpeechSynthesisUtterance(text)
       utter.lang = 'fr-FR'
       synth.speak(utter)
@@ -53,11 +48,14 @@ export default function SetDetail() {
   }
 
   if (!set) return <div>Chargement…</div>
-  const cards = set.cards || []
+  const cards = set.cards?.map(card => ({
+    ...card,
+    imageFront: card.imageFront ?? card.image ?? "",
+    imageBack: card.imageBack ?? "",
+  })) || []
 
   return (
     <div style={{maxWidth: 800, margin: "0 auto", marginTop: 18, display: "flex"}}>
-
       <div style={{flex: 1}}>
         {/* Modes */}
         <div style={{display: "flex", gap: 20, flexWrap: "wrap", margin: "0 0 26px 0"}}>
@@ -110,7 +108,7 @@ export default function SetDetail() {
             aria-label="Cliquer pour retourner la carte"
           >
             <div className="q-flashcard-flip-inner">
-              {/* Face avant : Mot */}
+              {/* Face avant : Mot ou image */}
               <div className="q-flashcard-flip-front">
                 <div style={{
                   flex: 1,
@@ -122,12 +120,26 @@ export default function SetDetail() {
                   fontWeight: 400,
                   height: "100%",
                   display: "flex",
+                  flexDirection: "column",
                   alignItems: "center",
                   justifyContent: "center"
                 }}>
-                  {cards[current] ? cards[current].term : "Aucune carte"}
+                  {cards[current]?.imageFront && (
+                    <img
+                      src={cards[current].imageFront}
+                      alt=""
+                      style={{
+                        maxHeight: 120,
+                        maxWidth: "95%",
+                        display: "block",
+                        margin: "12px auto 10px",
+                        borderRadius: 10,
+                        boxShadow: "0 2px 8px #2224"
+                      }}
+                    />
+                  )}
+                  {cards[current]?.term}
                 </div>
-                {/* Actions sur la carte */}
                 <div style={{
                   position: "absolute", top: 14, right: 24, display: "flex", gap: 15
                 }}>
@@ -144,7 +156,7 @@ export default function SetDetail() {
                   >🔊</span>
                 </div>
               </div>
-              {/* Face arrière : Définition */}
+              {/* Face arrière : Définition ou image */}
               <div className="q-flashcard-flip-back">
                 <div style={{
                   flex: 1,
@@ -156,12 +168,26 @@ export default function SetDetail() {
                   fontWeight: 400,
                   height: "100%",
                   display: "flex",
+                  flexDirection: "column",
                   alignItems: "center",
                   justifyContent: "center"
                 }}>
-                  {cards[current] ? cards[current].definition : "Aucune définition"}
+                  {cards[current]?.imageBack && (
+                    <img
+                      src={cards[current].imageBack}
+                      alt=""
+                      style={{
+                        maxHeight: 120,
+                        maxWidth: "95%",
+                        display: "block",
+                        margin: "12px auto 10px",
+                        borderRadius: 10,
+                        boxShadow: "0 2px 8px #2224"
+                      }}
+                    />
+                  )}
+                  {cards[current]?.definition}
                 </div>
-                {/* Actions sur la carte */}
                 <div style={{
                   position: "absolute", top: 14, right: 24, display: "flex", gap: 15
                 }}>
@@ -261,12 +287,77 @@ export default function SetDetail() {
             <div style={{color: "var(--q-text-light)", fontSize: 13}}>Créée il y a 1 an</div>
           </div>
         </div>
+        {/* BOUTON MODIFIER */}
+        <div style={{marginTop: 30}}>
+          <Link to={`/sets/${id}/edit`}>
+            <button style={{
+              background: "#3c3fa4",
+              color: "#fff",
+              border: "none",
+              borderRadius: 8,
+              fontSize: 15,
+              padding: "7px 25px"
+            }}>
+              Modifier la liste
+            </button>
+          </Link>
+        </div>
+
+        {/* TABLEAU TERME / DEFINITION */}
+        {cards.length > 0 && (
+          <div style={{
+            margin: "40px auto 32px auto",
+            maxWidth: 600,
+            background: "#232541",
+            borderRadius: 14,
+            boxShadow: "0 2px 12px #181b3a22",
+            padding: "18px 26px"
+          }}>
+            <table style={{
+              width: "100%",
+              borderCollapse: "collapse",
+              color: "#fff",
+              fontSize: 18,
+              letterSpacing: "0.5px"
+            }}>
+              <thead>
+                <tr>
+                  <th style={{
+                    borderBottom: "2px solid #353962",
+                    padding: "8px 6px",
+                    color: "#b3baff",
+                    fontWeight: 700,
+                    textAlign: "left"
+                  }}>Terme</th>
+                  <th style={{
+                    borderBottom: "2px solid #353962",
+                    padding: "8px 6px",
+                    color: "#b3baff",
+                    fontWeight: 700,
+                    textAlign: "left"
+                  }}>Définition</th>
+                </tr>
+              </thead>
+              <tbody>
+                {cards.map((c, i) => (
+                  <tr key={i} style={{borderBottom: "1px solid #353962"}}>
+                    <td style={{padding: "8px 6px", verticalAlign: "top"}}>
+                      {c.term || c.question}
+                    </td>
+                    <td style={{padding: "8px 6px", verticalAlign: "top"}}>
+                      {c.definition || c.reponse}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   )
 }
 
-// Bouton Mode avec icône et badge éventuel
 function ModeButton({icon, label, badge}) {
   return (
     <div style={{

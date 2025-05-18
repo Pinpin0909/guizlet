@@ -2,6 +2,14 @@ import React, { useEffect, useState, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import axios from 'axios'
 
+// Une carte est valide pour le mode dictée si le mot à faire deviner (term/question) est du texte non vide
+function isValidSpellCard(card) {
+  // term ou question doit être du texte (PAS une image seule)
+  return (
+    !!(card.term && typeof card.term === "string" && card.term.trim().length > 0)
+  )
+}
+
 export default function SpellMode() {
   const { id } = useParams()
   const [cards, setCards] = useState([])
@@ -13,12 +21,24 @@ export default function SpellMode() {
   const synth = useRef(window.speechSynthesis)
 
   useEffect(() => {
-    axios.get(`/api/sets/${id}`).then(r => setCards(r.data.cards || []))
+    axios.get(`/api/sets/${id}`).then(r => {
+      // Migration et filtrage selon la règle
+      const filtered = (r.data.cards || [])
+        .map(card => ({
+          ...card,
+          imageFront: card.imageFront ?? card.image ?? "",
+          imageBack: card.imageBack ?? "",
+          term: card.term ?? card.question ?? "",
+          definition: card.definition ?? card.reponse ?? "",
+        }))
+        .filter(isValidSpellCard)
+      setCards(filtered)
+    })
   }, [id])
 
   useEffect(() => {
     if (cards.length && cards[idx]) {
-      playAudio(cards[idx].term || cards[idx].question)
+      playAudio(cards[idx].term)
     }
     // eslint-disable-next-line
   }, [cards, idx])
@@ -66,7 +86,7 @@ export default function SpellMode() {
 
   const handleSubmit = e => {
     e.preventDefault()
-    const answer = (card.term || card.question || "").trim().toLowerCase()
+    const answer = (card.term || "").trim().toLowerCase()
     if (input.trim().toLowerCase() === answer) {
       setScore(score + 1)
       setError(false)
@@ -120,7 +140,7 @@ export default function SpellMode() {
       }}>
         <div style={{ fontSize: 20, marginBottom: 20 }}>
           <button
-            onClick={() => playAudio(card.term || card.question)}
+            onClick={() => playAudio(card.term)}
             style={{
               background: "#353962",
               color: "#b3baff",

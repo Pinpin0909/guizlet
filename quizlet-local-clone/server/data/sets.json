@@ -1,34 +1,184 @@
 {
   "sets": [
     {
-      "title": "chat",
-      "description": "sdfsqdq qsdfq",
-      "cards": [
-        {
-          "term": "vache",
-          "definition": "mouton"
-        },
-        {
-          "term": "agneau ",
-          "definition": "poulet"
-        }
-      ],
-      "id": "KjiQSaEEmDdD7AtfzX85s"
-    },
-    {
-      "title": "dsd",
+      "title": "fddfs",
       "description": "",
       "cards": [
         {
-          "term": "sdds",
-          "definition": "dsds"
+          "term": "vache",
+          "definition": "mouton",
+          "image": "https://static.wikia.nocookie.net/the-bestiary/images/7/77/ImgaES.jpg/revision/latest?cb=20150407010357"
         },
         {
-          "term": "ds",
-          "definition": "dsds"
+          "term": "agneau",
+          "definition": "poulet",
+          "image": ""
+        },
+        {
+          "term": "carapace",
+          "definition": "vartef",
+          "image": ""
         }
       ],
-      "id": "IWsoIE3mT3mipCy_2-nAs"
+      "id": "qaiTOX4l6AberrZhgaTZr"
+    },
+    {
+      "title": "test",
+      "description": "",
+      "cards": [
+        {
+          "term": "Photosynthèse",
+          "definition": "Processus par lequel les plantes transforment la lumière solaire en énergie chimique.",
+          "imageFront": "",
+          "imageBack": ""
+        },
+        {
+          "term": "Atome",
+          "definition": "Plus petite unité d’un élément chimique, constituée de protons, neutrons et électrons.",
+          "imageFront": "",
+          "imageBack": ""
+        },
+        {
+          "term": "Démocratie",
+          "definition": "Régime politique dans lequel le pouvoir appartient au peuple.",
+          "imageFront": "",
+          "imageBack": ""
+        },
+        {
+          "term": "Écosystème",
+          "definition": "Ensemble formé par une communauté d’êtres vivants et son environnement.",
+          "imageFront": "",
+          "imageBack": ""
+        },
+        {
+          "term": "Métaphore",
+          "definition": "Figure de style qui compare deux choses sans utiliser « comme ».",
+          "imageFront": "",
+          "imageBack": ""
+        },
+        {
+          "term": "Théorème",
+          "definition": "Proposition démontrée à partir d’axiomes ou d’autres théorèmes.",
+          "imageFront": "",
+          "imageBack": ""
+        },
+        {
+          "term": "Guerre froide",
+          "definition": "Conflit idéologique et politique entre les États-Unis et l’URSS après la Seconde Guerre mondiale.",
+          "imageFront": "",
+          "imageBack": ""
+        },
+        {
+          "term": "Gène",
+          "definition": "Segment d’ADN codant pour une protéine ou une fonction biologique.",
+          "imageFront": "",
+          "imageBack": ""
+        },
+        {
+          "term": "République",
+          "definition": "Système politique où le pouvoir est exercé par des représentants élus.",
+          "imageFront": "",
+          "imageBack": ""
+        },
+        {
+          "term": "Allégorie",
+          "definition": "Représentation d’une idée abstraite sous une forme concrète (souvent dans l’art ou la littérature).",
+          "imageFront": "",
+          "imageBack": ""
+        },
+        {
+          "term": "Hypothèse",
+          "definition": "Proposition avancée pour expliquer un fait, à vérifier par l’expérimentation.",
+          "imageFront": "",
+          "imageBack": ""
+        },
+        {
+          "term": "Quadrilatère",
+          "definition": "Polygone à quatre côtés.",
+          "imageFront": "",
+          "imageBack": ""
+        },
+        {
+          "term": "Voltage",
+          "definition": "Différence de potentiel électrique entre deux points.",
+          "imageFront": "",
+          "imageBack": ""
+        },
+        {
+          "term": "Inflation",
+          "definition": "Hausse générale et durable des prix.",
+          "imageFront": "",
+          "imageBack": ""
+        },
+        {
+          "term": "Mitochondrie",
+          "definition": "Organite cellulaire responsable de la production d’énergie.",
+          "imageFront": "",
+          "imageBack": ""
+        },
+        {
+          "term": "Oxymore",
+          "definition": "Figure de style qui réunit deux termes opposés.",
+          "imageFront": "",
+          "imageBack": ""
+        },
+        {
+          "term": "Société",
+          "definition": "Groupe d’individus vivant ensemble et organisés selon des règles communes.",
+          "imageFront": "",
+          "imageBack": ""
+        },
+        {
+          "term": "Condensation",
+          "definition": "Passage de l’état gazeux à l’état liquide.",
+          "imageFront": "",
+          "imageBack": ""
+        },
+        {
+          "term": "Révolution française",
+          "definition": "Période de bouleversements politiques majeurs en France à partir de 1789.",
+          "imageFront": "",
+          "imageBack": ""
+        },
+        {
+          "term": "Algorithme",
+          "definition": "Suite d’instructions permettant de résoudre un problème.",
+          "imageFront": "",
+          "imageBack": ""
+        }
+      ],
+      "id": "yDoJ_bgerk7CDj2ARlIcj"
+    },
+    {
+      "title": "test fac",
+      "description": "",
+      "cards": [
+        {
+          "term": "Livre",
+          "definition": "Objet contenant des pages à lire.",
+          "imageFront": "",
+          "imageBack": ""
+        },
+        {
+          "term": "Pomme",
+          "definition": "Fruit rond, souvent rouge ou vert.",
+          "imageFront": "https://www.fruits-vaud-geneve.ch/img/pomme-gala.png",
+          "imageBack": ""
+        },
+        {
+          "term": "Nez",
+          "definition": "Partie du visage pour sentir les odeurs.",
+          "imageFront": "",
+          "imageBack": ""
+        },
+        {
+          "term": "Clé",
+          "definition": "Objet qui ouvre ou ferme une porte.",
+          "imageFront": "",
+          "imageBack": ""
+        }
+      ],
+      "id": "dJYSOkqopPgt-rHKcGNQ9"
     }
   ]
 }

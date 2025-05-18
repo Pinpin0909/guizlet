@@ -17,7 +17,6 @@ function isSimilar(a, b) {
   a = a.trim().toLowerCase()
   b = b.trim().toLowerCase()
   if (a === b) return true
-  // tolère une faute de frappe (distance <= 2)
   const dp = Array.from({length: a.length+1}, () => Array(b.length+1).fill(0))
   for (let i = 0; i <= a.length; i++) dp[i][0] = i
   for (let j = 0; j <= b.length; j++) dp[0][j] = j
@@ -27,6 +26,19 @@ function isSimilar(a, b) {
         ? dp[i-1][j-1]
         : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1])
   return dp[a.length][b.length] <= 2
+}
+
+// On veut une question (texte ou image) ET une réponse texte (jamais image seule). Pour tf, il faut OBLIGATOIREMENT du texte côté question.
+function isValidTestCard(card) {
+  return (
+    (
+      (card.term && card.term.trim() !== "") ||
+      (card.question && card.question.trim() !== "") ||
+      (card.imageFront && card.imageFront.trim() !== "")
+    )
+    &&
+    (card.definition && card.definition.trim() !== "")
+  )
 }
 
 // ECRAN DE CONFIGURATION
@@ -78,7 +90,25 @@ function QuestionView({q, onAnswer, feedback, instant, onNext, idx, total}) {
       }}>
         {q.type === "mcq" && (
           <>
-            <div style={{marginBottom:18}}>{q.question}</div>
+            <div style={{marginBottom:18}}>
+              {q.imageFront && q.imageFront.trim() !== "" &&
+                <div style={{marginBottom: 10}}>
+                  <img
+                    src={q.imageFront}
+                    alt="Question"
+                    style={{
+                      maxHeight: 120,
+                      maxWidth: "100%",
+                      marginBottom: 7,
+                      borderRadius: 8,
+                      boxShadow: "0 1px 5px #2223",
+                      display: "block"
+                    }}
+                  />
+                </div>
+              }
+              {q.question}
+            </div>
             {q.options.map(opt=>
               <button key={opt}
                 disabled={!!feedback}
@@ -102,7 +132,25 @@ function QuestionView({q, onAnswer, feedback, instant, onNext, idx, total}) {
         )}
         {q.type === "tf" && (
           <>
-            <div style={{marginBottom:18}}>{q.question}</div>
+            <div style={{marginBottom:18}}>
+              {q.imageFront && q.imageFront.trim() !== "" &&
+                <div style={{marginBottom: 10}}>
+                  <img
+                    src={q.imageFront}
+                    alt="Question"
+                    style={{
+                      maxHeight: 120,
+                      maxWidth: "100%",
+                      marginBottom: 7,
+                      borderRadius: 8,
+                      boxShadow: "0 1px 5px #2223",
+                      display: "block"
+                    }}
+                  />
+                </div>
+              }
+              {q.question}
+            </div>
             <button
               style={{
                 background: feedback ? (q.answer===true?"#68d391":(feedback.user===true?"#fed7d7":"#353962")) : "#353962",
@@ -127,10 +175,10 @@ function QuestionView({q, onAnswer, feedback, instant, onNext, idx, total}) {
           </>
         )}
         {q.type==="written" && (
-          <WrittenTest answer={q.answer} onCorrect={onAnswer} feedback={feedback} />
+          <WrittenTest answer={q.answer} onCorrect={onAnswer} feedback={feedback} imageFront={q.imageFront} question={q.question} />
         )}
         {q.type==="match" && (
-          <MatchTest pair={q.pair} onCorrect={onAnswer} feedback={feedback}/>
+          <MatchTest pair={q.pair} onCorrect={onAnswer} feedback={feedback} imageFront={q.imageFront} />
         )}
       </div>
       {instant && feedback &&
@@ -142,17 +190,35 @@ function QuestionView({q, onAnswer, feedback, instant, onNext, idx, total}) {
   )
 }
 
-function WrittenTest({ answer, onCorrect, feedback }) {
+function WrittenTest({ answer, onCorrect, feedback, imageFront, question }) {
   const [val, setVal] = useState('')
   return (
     <form onSubmit={e => {
       e.preventDefault()
       if (!feedback) onCorrect(val)
-    }} style={{display:"flex",alignItems:"center",gap:10,marginTop:16}}>
+    }} style={{display:"flex",alignItems:"center",gap:10,marginTop:16,flexDirection:"column"}}>
+      {imageFront && imageFront.trim() !== "" &&
+        <div style={{marginBottom: 10, textAlign: "center"}}>
+          <img
+            src={imageFront}
+            alt="Question"
+            style={{
+              maxHeight: 120,
+              maxWidth: "100%",
+              marginBottom: 7,
+              borderRadius: 8,
+              boxShadow: "0 1px 5px #2223",
+              display: "block",
+              margin: "0 auto"
+            }}
+          />
+        </div>
+      }
+      {question && <div style={{marginBottom: 12}}>{question}</div>}
       <input
         value={val}
         onChange={e => setVal(e.target.value)}
-        placeholder="Définition"
+        placeholder="Votre réponse"
         style={{
           border: feedback
             ? (feedback.correct ? '2px solid #68d391' : "2px solid #f56565")
@@ -185,13 +251,30 @@ function WrittenTest({ answer, onCorrect, feedback }) {
   )
 }
 
-function MatchTest({ pair, onCorrect, feedback }) {
+function MatchTest({ pair, onCorrect, feedback, imageFront }) {
   const [val, setVal] = useState('')
   return (
     <form onSubmit={e => {
       e.preventDefault()
       if (!feedback) onCorrect({term: pair.term, definition: val})
     }} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:8,marginTop:12}}>
+      {imageFront && imageFront.trim() !== "" &&
+        <div style={{marginBottom: 10, textAlign: "center"}}>
+          <img
+            src={imageFront}
+            alt="Question"
+            style={{
+              maxHeight: 120,
+              maxWidth: "100%",
+              marginBottom: 7,
+              borderRadius: 8,
+              boxShadow: "0 1px 5px #2223",
+              display: "block",
+              margin: "0 auto"
+            }}
+          />
+        </div>
+      }
       <div style={{marginBottom:4,color:"#b3baff"}}>{pair.term}</div>
       <input
         value={val}
@@ -241,7 +324,7 @@ function ResultPage({questions, answers, timer, onRetry, id}) {
       <div style={{textAlign:'left',margin:"16px auto 16px auto",background:"#232541",padding:18,borderRadius:12}}>
         {questions.map((q,i)=>
           <div key={i} style={{marginBottom:12}}>
-            <div style={{fontWeight:600,color:"#b3baff"}}>Q{i+1}. {q.question || q.pair?.term}</div>
+            <div style={{fontWeight:600,color:"#b3baff"}}>Q{i+1}. {q.question || q.pair?.term || "(Question avec image)"}</div>
             <div style={{fontSize:15}}>
               <span>Votre réponse: </span>
               {answers[i]?.user !== undefined
@@ -287,9 +370,18 @@ export default function TestMode() {
 
   useEffect(() => {
     axios.get(`/api/sets/${id}`).then(r => {
-      setCards(r.data.cards || [])
+      const filtered = (r.data.cards || [])
+        .map(card => ({
+          ...card,
+          imageFront: card.imageFront || card.image || "",
+          imageBack: card.imageBack || "",
+          term: card.term || card.question || "",
+          definition: card.definition || card.reponse || "",
+        }))
+        .filter(isValidTestCard)
+      setCards(filtered);
     })
-  }, [id])
+  }, [id]);
 
   // Génération des questions selon config
   useEffect(() => {
@@ -297,7 +389,6 @@ export default function TestMode() {
     let q = []
     let typesArr = Object.entries(config.types).filter(([t,v])=>v).map(([t])=>t)
     let base = config.mix ? shuffle(cards) : [...cards]
-    // Génère des questions du type demandé, de façon équilibrée
     let i = 0
     while(q.length < config.nb && i < base.length*4) {
       for(const type of typesArr) {
@@ -308,31 +399,46 @@ export default function TestMode() {
             type: 'mcq',
             question: card.term || card.question,
             options: shuffle([
-              card.definition || card.reponse,
-              ...shuffle(base.filter(c=>(c.term||c.question)!==(card.term||card.question))).slice(0,3).map(c=>c.definition||c.reponse)
+              card.definition,
+              ...shuffle(base.filter(
+                c => (c.term||c.question)!==(card.term||card.question) && c.definition && c.definition.trim() !== ""
+              )).slice(0,3).map(c=>c.definition)
             ]),
-            answer: card.definition || card.reponse
+            answer: card.definition,
+            imageFront: card.imageFront
           })
         }
         if(type==="tf") {
-          const tf = randomBool()
-          q.push({
-            type: 'tf',
-            question: (card.term||card.question)+' signifie "'+(tf?(card.definition||card.reponse):shuffle(base.filter(c=>(c.term||c.question)!==(card.term||card.question)))[0][ 'definition' in card ? 'definition':'reponse'])+'"',
-            answer: tf ? true : false
-          })
+          // Générer tf uniquement si question texte (pas image seule)
+          if ((card.term && card.term.trim() !== "") || (card.question && card.question.trim() !== "")) {
+            const tf = randomBool()
+            let fakeDef = shuffle(base.filter(
+              c => (c.term||c.question)!==(card.term||card.question) && c.definition && c.definition.trim() !== ""
+            ))[0]
+            q.push({
+              type: 'tf',
+              question: (card.term||card.question)+' signifie "'+(tf
+                ? card.definition
+                : (fakeDef ? fakeDef.definition : "???")
+              )+'"',
+              answer: tf ? true : false,
+              imageFront: card.imageFront
+            })
+          }
         }
         if(type==="match") {
           q.push({
             type: 'match',
-            pair: { term: card.term || card.question, definition: card.definition || card.reponse }
+            pair: { term: card.term || card.question, definition: card.definition },
+            imageFront: card.imageFront
           })
         }
         if(type==="written") {
           q.push({
             type: 'written',
             question: card.term || card.question,
-            answer: card.definition || card.reponse
+            answer: card.definition,
+            imageFront: card.imageFront
           })
         }
       }
@@ -391,7 +497,6 @@ export default function TestMode() {
     }
   }
 
-  // Gestion du passage à la question suivante (en correction immédiate)
   function handleNext() {
     setFeedback(null)
     if(idx+1 < questions.length) setIdx(idx+1)
@@ -410,11 +515,11 @@ export default function TestMode() {
     setFeedback(null)
   }
 
-  // Affichage
   if(mode==="config") {
     return <TestConfig onStart={setConfig} cardCount={cards.length}/>
   }
-  if(!questions.length) return <div>Chargement…</div>
+  if(cards.length === 0) return <div style={{color:"#fff",textAlign:"center",padding:30}}>Chargement des cartes...</div>
+  if(!questions.length) return <div style={{color:"#fff",textAlign:"center",padding:30}}>Préparation des questions...</div>
   if(mode==="done") {
     return <ResultPage questions={questions} answers={answers} timer={timer} onRetry={handleRetry} id={id} />
   }

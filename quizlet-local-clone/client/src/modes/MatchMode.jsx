@@ -6,6 +6,16 @@ function shuffle(array) {
   return array.slice().sort(() => Math.random() - 0.5)
 }
 
+// Une carte est valide si on peut afficher au moins une face (texte ou image) pour chaque colonne
+function isValidMatchCard(card) {
+  // On accepte : term OU imageFront pour la face "terme"
+  // et definition OU reponse OU imageBack pour la face "définition"
+  return (
+    (!!card.term || !!card.question || !!card.imageFront) &&
+    (!!card.definition || !!card.reponse || !!card.imageBack)
+  )
+}
+
 export default function MatchMode() {
   const { id } = useParams()
   const [cards, setCards] = useState([])
@@ -18,7 +28,17 @@ export default function MatchMode() {
 
   useEffect(() => {
     axios.get(`/api/sets/${id}`).then(r => {
-      setCards(r.data.cards || [])
+      // Migration + filtrage
+      const filtered = (r.data.cards || [])
+        .map(card => ({
+          ...card,
+          imageFront: card.imageFront ?? card.image ?? "",
+          imageBack: card.imageBack ?? "",
+          term: card.term ?? card.question ?? "",
+          definition: card.definition ?? card.reponse ?? "",
+        }))
+        .filter(isValidMatchCard)
+      setCards(filtered)
     })
   }, [id])
 
@@ -46,8 +66,12 @@ export default function MatchMode() {
       // Check match
       if (
         selected.item.type !== item.type &&
-        ((selected.item.term === item.term && selected.item.definition === item.definition) ||
-         (selected.item.term === item.definition && selected.item.definition === item.term))
+        (
+          // match par id unique (privilégier si dispo)
+          (selected.item.term === item.term && selected.item.definition === item.definition)
+          ||
+          (selected.item.term === item.definition && selected.item.definition === item.term)
+        )
       ) {
         setMatches([...matches, selected.i, i])
         setSelected(null)
@@ -110,6 +134,49 @@ export default function MatchMode() {
             cursor: "pointer"
           }}>Retour</button>
         </Link>
+      </div>
+    )
+  }
+
+  function renderItemContent(item) {
+    // Face "term" : imageFront au-dessus du texte si dispo
+    if (item.type === 'term') {
+      return (
+        <div style={{display:"flex", flexDirection:"column", alignItems:"center"}}>
+          {item.imageFront &&
+            <img
+              src={item.imageFront}
+              alt=""
+              style={{
+                maxHeight: 54,
+                maxWidth: 110,
+                marginBottom: 6,
+                borderRadius: 7,
+                boxShadow: "0 1px 4px #23254133"
+              }}
+            />
+          }
+          <span>{item.term || item.question}</span>
+        </div>
+      )
+    }
+    // Face "definition" : imageBack au-dessus du texte si dispo
+    return (
+      <div style={{display:"flex", flexDirection:"column", alignItems:"center"}}>
+        {item.imageBack &&
+          <img
+            src={item.imageBack}
+            alt=""
+            style={{
+              maxHeight: 54,
+              maxWidth: 110,
+              marginBottom: 6,
+              borderRadius: 7,
+              boxShadow: "0 1px 4px #23254133"
+            }}
+          />
+        }
+        <span>{item.definition || item.reponse}</span>
       </div>
     )
   }
@@ -187,7 +254,7 @@ export default function MatchMode() {
               transition: "background 0.13s, color 0.13s, border 0.13s"
             }}
           >
-            {item.type === 'term' ? (item.term || item.question) : (item.definition || item.reponse)}
+            {renderItemContent(item)}
           </div>
         )}
       </div>
@@ -233,7 +300,7 @@ export default function MatchMode() {
         </Link>
       </div>
       <div style={{marginTop:10, color:"#9fa0c9", fontSize:14}}>
-        Associez chaque terme à sa définition le plus vite possible.
+        Associez chaque terme à sa définition (texte ou image) le plus vite possible.
       </div>
     </div>
   )

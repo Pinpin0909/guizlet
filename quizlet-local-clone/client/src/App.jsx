@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { BrowserRouter, Routes, Route, Link, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import Home from "./components/Home";
 import SetDetail from "./components/SetDetail";
 import EditSet from "./components/EditSet";
@@ -205,6 +205,7 @@ export default function App() {
               <Route path="/" element={<Home search={search} />} />
               <Route path="/sets/new" element={<EditSet />} />
               <Route path="/sets/:id" element={<SetDetail />} />
+              <Route path="/sets/:id/edit" element={<EditSet />} />
               <Route path="/sets/:id/flashcards" element={<FlashcardsMode />} />
               <Route path="/sets/:id/learn" element={<LearnMode />} />
               <Route path="/sets/:id/write" element={<WriteMode />} />

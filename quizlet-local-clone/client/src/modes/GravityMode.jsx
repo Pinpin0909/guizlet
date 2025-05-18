@@ -6,6 +6,19 @@ function shuffle(array) {
   return array.slice().sort(() => Math.random() - 0.5)
 }
 
+// Une carte est valide si :
+// - la réponse attendue (term) est un texte non vide (PAS une image seule)
+// - la question affichée (definition ou imageBack) peut être texte et/ou image
+function isValidGravityCard(card) {
+  // On ne veut pas réclamer une image comme réponse à l'utilisateur.
+  // Donc "term" doit être du texte.
+  // On accepte que la définition/question soit texte ou image, peu importe.
+  return (
+    !!(card.term && typeof card.term === "string" && card.term.trim().length > 0) &&
+    !!(card.definition || card.reponse || card.imageBack) // la face affichée doit exister (texte ou image)
+  )
+}
+
 export default function GravityMode() {
   const { id } = useParams()
   const [cards, setCards] = useState([])
@@ -17,7 +30,19 @@ export default function GravityMode() {
   const intervalRef = useRef()
 
   useEffect(() => {
-    axios.get(`/api/sets/${id}`).then(r => setCards(shuffle(r.data.cards || [])))
+    axios.get(`/api/sets/${id}`).then(r => {
+      // Migration et filtrage selon la règle :
+      const filtered = (r.data.cards || [])
+        .map(card => ({
+          ...card,
+          imageFront: card.imageFront ?? card.image ?? "",
+          imageBack: card.imageBack ?? "",
+          term: card.term ?? card.question ?? "",
+          definition: card.definition ?? card.reponse ?? "",
+        }))
+        .filter(isValidGravityCard)
+      setCards(shuffle(filtered))
+    })
   }, [id])
 
   useEffect(() => {
@@ -37,7 +62,6 @@ export default function GravityMode() {
       ])
     }, Math.max(1800 - level * 120, 400))
     return () => clearInterval(intervalRef.current)
-    // eslint-disable-next-line
   }, [cards, lost, level])
 
   useEffect(() => {
@@ -58,7 +82,9 @@ export default function GravityMode() {
 
   const handleInput = e => {
     setInput(e.target.value)
-    const matchIdx = falling.findIndex(f => (f.term || f.question).toLowerCase() === e.target.value.trim().toLowerCase())
+    const matchIdx = falling.findIndex(f =>
+      (f.term || "").toLowerCase() === e.target.value.trim().toLowerCase()
+    )
     if (matchIdx !== -1) {
       setScore(score + 1)
       setFalling(falling.filter((_, i) => i !== matchIdx))
@@ -107,7 +133,7 @@ export default function GravityMode() {
         {falling.map((f, i) =>
           <div key={i} style={{
             position: 'absolute',
-            left: Math.abs((f.definition || f.reponse || "").length * 7 + i * 13) % 240,
+            left: Math.abs(((f.definition || f.reponse || "").length * 7 + i * 13)) % 240,
             top: f.y,
             background: '#9f7aea',
             color: '#fff',
@@ -119,9 +145,30 @@ export default function GravityMode() {
             boxShadow: "0 2px 12px #4736a644",
             textShadow: "1px 1px 2px #232541aa",
             whiteSpace: "nowrap",
-            transition: 'top 0.1s'
+            transition: 'top 0.1s',
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center"
           }}>
-            {f.definition || f.reponse}
+            {/* Affiche l'imageBack si présente, sinon le texte definition/reponse */}
+            {f.imageBack
+              ? (
+                <img
+                  src={f.imageBack}
+                  alt=""
+                  style={{
+                    maxHeight: 60,
+                    maxWidth: 140,
+                    marginBottom: 7,
+                    borderRadius: 8,
+                    boxShadow: "0 1px 5px #2223"
+                  }}
+                />
+              )
+              : null}
+            {(f.definition || f.reponse) && (
+              <span>{f.definition || f.reponse}</span>
+            )}
           </div>
         )}
         {lost && <div style={{
@@ -199,7 +246,7 @@ export default function GravityMode() {
         </Link>
       </div>
       <div style={{marginTop:10, color:"#9fa0c9", fontSize:14}}>
-        Tapez le mot qui correspond à la définition qui tombe !
+        Tapez le mot qui correspond à la définition ou l'image qui tombe !
       </div>
     </div>
   )
