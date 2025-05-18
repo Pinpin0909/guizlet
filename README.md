@@ -1,4 +1,4 @@
-**# Quizlet Local Clone
+# Quizlet Local Clone
 
 Clone local de Quizlet : une application web éducative pour apprendre avec des fiches interactives et plusieurs modes d'entraînement. (sans payé 😉)
 
