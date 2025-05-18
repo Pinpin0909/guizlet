@@ -26,7 +26,7 @@ Clone local de Quizlet : une application web éducative pour apprendre avec des 
 1. **Cloner le dépôt**
 
    ```bash
-   git clone <gh repo clone Pinpin0909/guizlet>
+   git clone gh repo clone Pinpin0909/guizlet
    cd quizlet-local-clone
    ```
 
