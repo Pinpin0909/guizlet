@@ -1,35 +1,47 @@
-// TrainingSideSwitch.jsx
-import React from "react";
 
-const options = [
-  { value: "term", label: "Termes" },
-  { value: "definition", label: "Définitions" },
-  { value: "both", label: "Les deux" },
-];
+import React, { useEffect } from 'react';
+import './TrainingSideSwitch.css';
 
-export default function TrainingSideSwitch({ value, onChange }) {
+/**
+ * Switch à trois positions pour choisir le côté d'entraînement (terme, définition, les deux)
+ * @param {Object} props - Propriétés du composant
+ * @param {string} props.value - Valeur actuelle ("term", "definition", "both")
+ * @param {function} props.onChange - Fonction appelée lors du changement de valeur
+ */
+export default function TrainingSideSwitch({ value = "term", onChange }) {
+  const options = [
+    { id: "term", label: "Terme" },
+    { id: "definition", label: "Définition" },
+    { id: "both", label: "Les deux" }
+  ];
+
+  // Persister la valeur dans localStorage à chaque changement
+  useEffect(() => {
+    if (value) {
+      localStorage.setItem('trainingSideValue', value);
+    }
+  }, [value]);
+
   return (
-    <div style={{ marginBottom: 20, display: "flex", justifyContent: "center" }}>
-      {options.map(opt => (
-        <button
-          key={opt.value}
-          onClick={() => onChange(opt.value)}
-          style={{
-            background: value === opt.value ? "#ff9400" : "#181b3a",
-            color: value === opt.value ? "#222" : "#ff9400",
-            border: "1px solid #ff9400",
-            borderRadius: 8,
-            fontWeight: 600,
-            fontSize: 18,
-            padding: "5px 16px",
-            cursor: "pointer",
-            outline: "none",
-            margin: "0 5px"
+    <div className="q-training-switch-container">
+      <div className="q-training-switch">
+        {options.map(option => (
+          <button
+            key={option.id}
+            className={`q-training-switch-option ${value === option.id ? 'active' : ''}`}
+            onClick={() => onChange(option.id)}
+            aria-pressed={value === option.id}
+          >
+            {option.label}
+          </button>
+        ))}
+        <div 
+          className="q-training-switch-slider" 
+          style={{ 
+            left: value === "term" ? "0%" : value === "definition" ? "33.33%" : "66.66%"
           }}
-        >
-          {opt.label}
-        </button>
-      ))}
+        />
+      </div>
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useLocation } from "react-router-dom";
 import axios from "axios";
 
 function shuffle(array) {
@@ -8,6 +8,10 @@ function shuffle(array) {
 
 export default function FlashcardsMode() {
   const { id } = useParams();
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const side = params.get("side") || "term"; // Récupère l'option de l'URL
+  
   const [cards, setCards] = useState([]);
   const [current, setCurrent] = useState(0);
   const [flipped, setFlipped] = useState(false);
@@ -19,9 +23,43 @@ export default function FlashcardsMode() {
         imageFront: card.imageFront ?? card.image ?? "",
         imageBack: card.imageBack ?? "",
       }));
-      setCards(shuffle(fixedCards));
+      
+      // Mélanger les cartes et les traiter en fonction du side
+      const processedCards = shuffle(fixedCards).map(card => {
+        if (side === "definition") {
+          // Inverser terme et définition
+          return {
+            ...card,
+            frontContent: card.definition || card.reponse || "",
+            frontImage: card.imageBack || "",
+            backContent: card.term || card.question || "",
+            backImage: card.imageFront || ""
+          };
+        } else if (side === "both") {
+          // Choisir au hasard si on affiche terme ou définition en premier
+          const isTermFirst = Math.random() < 0.5;
+          return {
+            ...card,
+            frontContent: isTermFirst ? (card.term || card.question || "") : (card.definition || card.reponse || ""),
+            frontImage: isTermFirst ? (card.imageFront || "") : (card.imageBack || ""),
+            backContent: isTermFirst ? (card.definition || card.reponse || "") : (card.term || card.question || ""),
+            backImage: isTermFirst ? (card.imageBack || "") : (card.imageFront || "")
+          };
+        } else {
+          // Mode par défaut: terme en premier
+          return {
+            ...card,
+            frontContent: card.term || card.question || "",
+            frontImage: card.imageFront || "",
+            backContent: card.definition || card.reponse || "",
+            backImage: card.imageBack || ""
+          };
+        }
+      });
+      
+      setCards(processedCards);
     });
-  }, [id]);
+  }, [id, side]);
 
   // Remet la carte côté question quand on change de carte
   useEffect(() => {
@@ -35,9 +73,9 @@ export default function FlashcardsMode() {
   function renderFront(card) {
     return (
       <div className="flip-card-face flip-card-front">
-        {card.imageFront && (
+        {card.frontImage && (
           <img
-            src={card.imageFront}
+            src={card.frontImage}
             alt=""
             style={{
               maxHeight: 110,
@@ -48,7 +86,7 @@ export default function FlashcardsMode() {
             }}
           />
         )}
-        <span>{card.term || card.question}</span>
+        <span>{card.frontContent}</span>
       </div>
     );
   }
@@ -56,9 +94,9 @@ export default function FlashcardsMode() {
   function renderBack(card) {
     return (
       <div className="flip-card-face flip-card-back">
-        {card.imageBack && (
+        {card.backImage && (
           <img
-            src={card.imageBack}
+            src={card.backImage}
             alt=""
             style={{
               maxHeight: 110,
@@ -69,10 +107,22 @@ export default function FlashcardsMode() {
             }}
           />
         )}
-        <span>{card.definition || card.reponse}</span>
+        <span>{card.backContent}</span>
       </div>
     );
   }
+
+  const getCardDescription = () => {
+    // Selon le mode, indiquer ce qu'on voit en bas de la carte
+    if (side === "definition") {
+      return flipped ? "Terme" : "Définition";
+    } else if (side === "both") {
+      // Pour le mode les deux, on ne peut pas savoir à l'avance
+      return flipped ? "Autre côté" : card.frontContent === (card.term || card.question) ? "Question" : "Définition";
+    } else {
+      return flipped ? "Définition" : "Question";
+    }
+  };
 
   return (
     <div style={{maxWidth: 520, margin: "0 auto", textAlign: "center"}}>
@@ -124,7 +174,7 @@ export default function FlashcardsMode() {
           fontSize: 15,
           zIndex: 2,
         }}>
-          {flipped ? "Définition" : "Question"}
+          {getCardDescription()}
         </span>
         {/* Animation CSS */}
         <style>

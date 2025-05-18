@@ -1,21 +1,29 @@
-import React, { useEffect, useState } from 'react'
-import { Link, useParams, useNavigate } from 'react-router-dom'
-import axios from 'axios'
-import { FaRegClone, FaPen } from 'react-icons/fa'
-import { MdSchool } from 'react-icons/md'
-import { BsGrid3X3Gap, BsFillLightningChargeFill } from 'react-icons/bs'
-import './SetDetail.css'
+import React, { useEffect, useState } from 'react';
+import { Link, useParams, useNavigate, useLocation } from 'react-router-dom';
+import axios from 'axios';
+import { FaRegClone, FaPen } from 'react-icons/fa';
+import { MdSchool } from 'react-icons/md';
+import { BsGrid3X3Gap, BsFillLightningChargeFill } from 'react-icons/bs';
+import './SetDetail.css';
+import TrainingSideSwitch from './TrainingSideSwitch'; // Importer le composant
 
 export default function SetDetail() {
-  const { id } = useParams()
-  const navigate = useNavigate()
-  const [set, setSet] = useState(null)
-  const [current, setCurrent] = useState(0)
-  const [flipped, setFlipped] = useState(false)
-  const [userSets, setUserSets] = useState([])
-  const [selectedSet, setSelectedSet] = useState(id)
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation(); // Pour détecter les changements de route
+  const [set, setSet] = useState(null);
+  const [current, setCurrent] = useState(0);
+  const [flipped, setFlipped] = useState(false);
+  const [userSets, setUserSets] = useState([]);
+  const [selectedSet, setSelectedSet] = useState(id);
+  
+  // Récupérer la valeur du localStorage au démarrage et la mettre à jour si nécessaire
+  const [trainingSide, setTrainingSide] = useState(() => {
+    const savedValue = localStorage.getItem('trainingSideValue');
+    return savedValue || "term"; // Utiliser la valeur sauvegardée ou la valeur par défaut
+  });
 
-  // Ajout : maîtrise par carte (localStorage)
+  // Ajout : maîtrise par carte (localStorage)
   const [maitrise, setMaitrise] = useState({});
   useEffect(() => {
     const data = localStorage.getItem(`maitrise_${id}`);
@@ -30,51 +38,63 @@ export default function SetDetail() {
   }, [id]);
 
   useEffect(() => {
-    axios.get(`/api/sets/${id}`).then(r => setSet(r.data))
-  }, [id])
+    axios.get(`/api/sets/${id}`).then(r => setSet(r.data));
+  }, [id]);
 
   useEffect(() => {
-    axios.get(`/api/sets`).then(r => setUserSets(r.data || []))
-  }, [])
+    axios.get(`/api/sets`).then(r => setUserSets(r.data || []));
+  }, []);
 
   useEffect(() => {
-    setFlipped(false)
-  }, [current])
+    setFlipped(false);
+  }, [current]);
 
   useEffect(() => {
-    setSelectedSet(id)
-  }, [id])
+    setSelectedSet(id);
+  }, [id]);
 
   useEffect(() => {
     if (selectedSet && selectedSet !== id) {
-      navigate(`/sets/${selectedSet}`)
+      navigate(`/sets/${selectedSet}`);
     }
-  }, [selectedSet, id, navigate])
+  }, [selectedSet, id, navigate]);
+
+  // Effet pour mettre à jour les URL des liens lors du changement de trainingSide
+  useEffect(() => {
+    // Sauvegarder la valeur dans localStorage à chaque changement
+    localStorage.setItem('trainingSideValue', trainingSide);
+  }, [trainingSide]);
+
+  // Gestionnaire pour le changement de valeur du switch
+  const handleTrainingSideChange = (value) => {
+    setTrainingSide(value);
+    localStorage.setItem('trainingSideValue', value);
+  };
 
   function playAudio(text) {
     if ('speechSynthesis' in window && text) {
-      const synth = window.speechSynthesis
-      synth.cancel()
-      const utter = new window.SpeechSynthesisUtterance(text)
-      utter.lang = 'fr-FR'
-      synth.speak(utter)
+      const synth = window.speechSynthesis;
+      synth.cancel();
+      const utter = new window.SpeechSynthesisUtterance(text);
+      utter.lang = 'fr-FR';
+      synth.speak(utter);
     }
   }
 
-  if (!set) return <div>Chargement…</div>
+  if (!set) return <div>Chargement…</div>;
   const cards = set.cards?.map(card => ({
     ...card,
     imageFront: card.imageFront ?? card.image ?? "",
     imageBack: card.imageBack ?? "",
     id: card.id || card.term || card.question
-  })) || []
+  })) || [];
 
   return (
     <div style={{maxWidth: 800, margin: "0 auto", marginTop: 18, display: "flex"}}>
       <div style={{flex: 1}}>
         {/* Modes */}
         <div style={{display: "flex", gap: 20, flexWrap: "wrap", margin: "0 0 26px 0"}}>
-          <Link to={`/sets/${id}/flashcards`} style={{flex: 1, minWidth: 160}}>
+          <Link to={`/sets/${id}/flashcards?side=${trainingSide}`} style={{flex: 1, minWidth: 160}}>
             <ModeButton icon={<FaRegClone size={24}/>} label="Cartes" />
           </Link>
           <Link to={`/sets/${id}/learn`} style={{flex: 1, minWidth: 160}}>
@@ -83,13 +103,13 @@ export default function SetDetail() {
           <Link to={`/sets/${id}/test`} style={{flex: 1, minWidth: 160}}>
             <ModeButton icon={<FaRegClone size={24}/>} label="Test" />
           </Link>
-          <Link to={`/sets/${id}/write`} style={{flex: 1, minWidth: 160}}>
+          <Link to={`/sets/${id}/write?side=${trainingSide}`} style={{flex: 1, minWidth: 160}}>
             <ModeButton icon={<FaPen size={22}/>} label="Écrire" />
           </Link>
-          <Link to={`/sets/${id}/Spell`} style={{flex: 1, minWidth: 160}}>
+          <Link to={`/sets/${id}/Spell?side=${trainingSide}`} style={{flex: 1, minWidth: 160}}>
             <ModeButton icon={<BsGrid3X3Gap size={24}/>} label="Dictée" />
           </Link>
-          <Link to={`/sets/${id}/Gravity`} style={{flex: 1, minWidth: 160}}>
+          <Link to={`/sets/${id}/Gravity?side=${trainingSide}`} style={{flex: 1, minWidth: 160}}>
             <ModeButton icon={<BsFillLightningChargeFill size={24}/>} label="Gravité" />
           </Link>
           <Link to={`/sets/${id}/match`} style={{flex: 1, minWidth: 160}}>
@@ -101,12 +121,17 @@ export default function SetDetail() {
         <div 
           className="q-flashcard-container"
           style={{
-            margin: "0 0 30px 0",
+            margin: "0 0 10px 0", // Réduit la marge pour placer le switch
             display: "flex",
             flexDirection: "column",
             alignItems: "center"
           }}
         >
+          {/* Switch discret à 3 positions placé en haut à droite */}
+          <div style={{ width: '100%', maxWidth: '600px' }}>
+            <TrainingSideSwitch value={trainingSide} onChange={handleTrainingSideChange} />
+          </div>
+          
           <div 
             className={`q-flashcard-flip${flipped ? " flipped" : ""}`}
             tabIndex={0}
@@ -118,7 +143,8 @@ export default function SetDetail() {
               height: 250,
               cursor: "pointer",
               perspective: 1200,
-              outline: "none"
+              outline: "none",
+              marginTop: 8
             }}
             aria-label="Cliquer pour retourner la carte"
           >
@@ -281,6 +307,7 @@ export default function SetDetail() {
           </button>
         </div>
 
+        {/* Le reste du composant reste inchangé */}
         {/* Créateur */}
         <div style={{marginTop: 36, display: "flex", alignItems: "center", gap: 14}}>
           <img src={`https://api.dicebear.com/7.x/fun-emoji/svg?seed=${set.author || "User"}`} alt="User" style={{width: 48, height: 48, borderRadius: "50%", background: "#222"}} />
@@ -383,7 +410,7 @@ export default function SetDetail() {
         )}
       </div>
     </div>
-  )
+  );
 }
 
 function ModeButton({icon, label, badge}) {
@@ -417,5 +444,5 @@ function ModeButton({icon, label, badge}) {
         }}>{badge}</span>
       )}
     </div>
-  )
+  );
 }
