@@ -5,7 +5,7 @@ import axios from 'axios'
 export default function EditSet() {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  const [cards, setCards] = useState([{ term: '', definition: '' }])
+  const [cards, setCards] = useState([{ term: '', definition: '', image: '' }])
   const [saving, setSaving] = useState(false)
   const navigate = useNavigate()
 
@@ -15,7 +15,7 @@ export default function EditSet() {
     setCards(updated)
   }
 
-  const addCard = () => setCards([...cards, { term: '', definition: '' }])
+  const addCard = () => setCards([...cards, { term: '', definition: '', image: '' }])
 
   const removeCard = (i) => {
     if (cards.length > 1) {
@@ -66,6 +66,12 @@ export default function EditSet() {
                 value={card.definition}
                 onChange={e => handleCardChange(i, 'definition', e.target.value)}
                 required
+              />
+              <input
+                placeholder="URL d'image (optionnel)"
+                value={card.image}
+                onChange={e => handleCardChange(i, 'image', e.target.value)}
+                style={{ minWidth: 120 }}
               />
               <button type="button" onClick={() => removeCard(i)} style={{ background: '#fed7d7', color: '#222' }}>✕</button>
             </div>

@@ -57,49 +57,6 @@ export default function SetDetail() {
 
   return (
     <div style={{maxWidth: 800, margin: "0 auto", marginTop: 18, display: "flex"}}>
-      {/* Sidebar avec la liste déroulante */}
-      <aside style={{
-        background: "#1b1d3a",
-        width: 210,
-        minHeight: "75vh",
-        borderRadius: 14,
-        padding: "24px 0 0 0",
-        display: "flex",
-        flexDirection: "column",
-        gap: 18,
-        marginRight: 34,
-        alignItems: "center"
-      }}>
-        <div style={{margin: "0 16px 8px 16px", width: "85%"}}>
-          <label htmlFor="liste-select" style={{
-            color: "#b3baff", fontWeight: 500, fontSize: 15, marginBottom: 4, display: "block", letterSpacing: 1
-          }}>
-            Mes listes
-          </label>
-          <select
-            id="liste-select"
-            value={selectedSet}
-            onChange={e => setSelectedSet(e.target.value)}
-            style={{
-              width: "100%",
-              background: "#232541",
-              color: "#b3baff",
-              border: "none",
-              borderRadius: 8,
-              padding: "8px 10px",
-              fontSize: 16,
-              marginBottom: 5,
-              marginTop: 2,
-              outline: "none"
-            }}
-          >
-            {userSets.length === 0 && <option value="">Aucune liste</option>}
-            {userSets.map(s => (
-              <option key={s.id} value={s.id}>{s.title}</option>
-            ))}
-          </select>
-        </div>
-      </aside>
 
       <div style={{flex: 1}}>
         {/* Modes */}
