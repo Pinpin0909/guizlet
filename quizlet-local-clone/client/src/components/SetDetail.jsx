@@ -121,17 +121,13 @@ export default function SetDetail() {
         <div 
           className="q-flashcard-container"
           style={{
-            margin: "0 0 10px 0", // Réduit la marge pour placer le switch
+            margin: "0 0 10px 0",
             display: "flex",
             flexDirection: "column",
-            alignItems: "center"
+            alignItems: "center",
+            position: "relative" // Pour le positionnement absolu du switch
           }}
         >
-          {/* Switch discret à 3 positions placé en haut à droite */}
-          <div style={{ width: '100%', maxWidth: '600px' }}>
-            <TrainingSideSwitch value={trainingSide} onChange={handleTrainingSideChange} />
-          </div>
-          
           <div 
             className={`q-flashcard-flip${flipped ? " flipped" : ""}`}
             tabIndex={0}
@@ -143,8 +139,7 @@ export default function SetDetail() {
               height: 250,
               cursor: "pointer",
               perspective: 1200,
-              outline: "none",
-              marginTop: 8
+              outline: "none"
             }}
             aria-label="Cliquer pour retourner la carte"
           >
@@ -248,6 +243,18 @@ export default function SetDetail() {
               </div>
             </div>
           </div>
+          
+          {/* Switch déplacé en bas à droite de la carte */}
+          <div style={{
+            position: "absolute", 
+            bottom: "0", 
+            right: "110px", 
+            width: "160px", // Taille réduite pour un look plus discret
+            transform: "translateY(10px)" // Positionne le switch légèrement en dessous de la carte
+          }}>
+            <TrainingSideSwitch value={trainingSide} onChange={handleTrainingSideChange} />
+          </div>
+          
           <div style={{color: "#9fa0c9", fontSize: 13, marginTop: 8}}>Cliquer sur la carte pour afficher la définition</div>
         </div>
 
