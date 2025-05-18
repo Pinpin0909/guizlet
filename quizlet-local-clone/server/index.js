@@ -4,31 +4,34 @@ const low = require('lowdb');
 const FileSync = require('lowdb/adapters/FileSync');
 const { nanoid } = require('nanoid');
 const path = require('path');
-const multer = require('multer'); // AJOUTÉ
+const multer = require('multer');
+const fs = require('fs');
 
 const app = express();
-const PORT = 3001;
+
+// Port unique pour frontend + backend
+const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
 
-// DB
+// Base de données (JSON)
 const file = path.join(__dirname, 'data', 'sets.json');
 const adapter = new FileSync(file);
 const db = low(adapter);
-
-// Initialise la structure si nécessaire
 db.defaults({ sets: [] }).write();
 
-// Pour upload de fichiers txt
+// Multer pour upload de fichier
 const upload = multer({ dest: 'uploads/' });
+
+// === API ROUTES ===
 
 // GET all sets
 app.get('/api/sets', (req, res) => {
   res.json(db.get('sets').value());
 });
 
-// GET single set
+// GET one set
 app.get('/api/sets/:id', (req, res) => {
   const set = db.get('sets').find({ id: req.params.id }).value();
   if (!set) return res.status(404).json({ error: 'Not found' });
@@ -42,16 +45,14 @@ app.post('/api/sets', (req, res) => {
   res.json(newSet);
 });
 
-// NOUVEAU : POST /api/sets/upload pour upload TXT
+// POST /api/sets/upload : upload fichier TXT
 app.post('/api/sets/upload', upload.single('file'), (req, res) => {
-  const fs = require('fs');
   const { title, description } = req.body;
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
   const filePath = req.file.path;
   try {
     const content = fs.readFileSync(filePath, 'utf-8');
     const lines = content.split('\n').filter(l => l.trim());
-    // Format attendu : terme;définition
     const cards = lines.map(line => {
       const [term, definition] = line.split(';');
       if (!term || !definition) throw new Error("Ligne invalide: " + line);
@@ -68,7 +69,7 @@ app.post('/api/sets/upload', upload.single('file'), (req, res) => {
   } catch (err) {
     res.status(400).json({ error: err.message });
   } finally {
-    fs.unlink(filePath, () => {}); // Nettoie le fichier uploadé
+    fs.unlink(filePath, () => {}); // Nettoie le fichier temporaire
   }
 });
 
@@ -80,12 +81,22 @@ app.put('/api/sets/:id', (req, res) => {
   res.json(set.value());
 });
 
-// DELETE a set
+// DELETE set
 app.delete('/api/sets/:id', (req, res) => {
   db.get('sets').remove({ id: req.params.id }).write();
   res.json({ ok: true });
 });
 
+// === FRONTEND (React/Vite buildé) ===
+
+app.use(express.static(path.join(__dirname, '../client/dist')));
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+});
+
+// === Lancement du serveur ===
+
 app.listen(PORT, () => {
-  console.log(`Backend listening on http://localhost:${PORT}`);
+  console.log(`App ready on http://localhost:${PORT}`);
 });
