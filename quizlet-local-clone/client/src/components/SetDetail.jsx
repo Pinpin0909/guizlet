@@ -15,6 +15,20 @@ export default function SetDetail() {
   const [userSets, setUserSets] = useState([])
   const [selectedSet, setSelectedSet] = useState(id)
 
+  // Ajout : maîtrise par carte (localStorage)
+  const [maitrise, setMaitrise] = useState({});
+  useEffect(() => {
+    const data = localStorage.getItem(`maitrise_${id}`);
+    if (data) {
+      try {
+        const arr = JSON.parse(data);
+        const obj = {};
+        arr.forEach(c => { if (c.id) obj[c.id] = c.niveau_maitrise; });
+        setMaitrise(obj);
+      } catch {}
+    }
+  }, [id]);
+
   useEffect(() => {
     axios.get(`/api/sets/${id}`).then(r => setSet(r.data))
   }, [id])
@@ -52,6 +66,7 @@ export default function SetDetail() {
     ...card,
     imageFront: card.imageFront ?? card.image ?? "",
     imageBack: card.imageBack ?? "",
+    id: card.id || card.term || card.question
   })) || []
 
   return (
@@ -303,7 +318,7 @@ export default function SetDetail() {
           </Link>
         </div>
 
-        {/* TABLEAU TERME / DEFINITION */}
+        {/* TABLEAU TERME / DEFINITION / MAITRISE */}
         {cards.length > 0 && (
           <div style={{
             margin: "40px auto 32px auto",
@@ -336,6 +351,13 @@ export default function SetDetail() {
                     fontWeight: 700,
                     textAlign: "left"
                   }}>Définition</th>
+                  <th style={{
+                    borderBottom: "2px solid #353962",
+                    padding: "8px 6px",
+                    color: "#b3baff",
+                    fontWeight: 700,
+                    textAlign: "left"
+                  }}>Maîtrise</th>
                 </tr>
               </thead>
               <tbody>
@@ -346,6 +368,12 @@ export default function SetDetail() {
                     </td>
                     <td style={{padding: "8px 6px", verticalAlign: "top"}}>
                       {c.definition || c.reponse}
+                    </td>
+                    <td style={{padding: "8px 6px", verticalAlign: "top"}}>
+                      {typeof maitrise[c.id] === "number"
+                        ? `${Math.round(maitrise[c.id]*100)}%`
+                        : <span style={{opacity:0.6}}>–</span>
+                      }
                     </td>
                   </tr>
                 ))}

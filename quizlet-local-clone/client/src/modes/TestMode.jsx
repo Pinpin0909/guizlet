@@ -515,6 +515,30 @@ export default function TestMode() {
     setFeedback(null)
   }
 
+  // Sauvegarde de la maîtrise dans le localStorage à la fin du test
+  useEffect(() => {
+    if (mode === "done" && questions.length > 0 && answers.length === questions.length) {
+      // Calcul du niveau de maitrise pour chaque question (1 si correct, 0 sinon)
+      const masteryData = questions.map((q, i) => ({
+        id: q.pair?.term || q.question,
+        niveau_maitrise: answers[i]?.statut === "correct" ? 1 : 0
+      }));
+      // On fusionne avec ce qui existe déjà (LearnMode)
+      const existing = localStorage.getItem(`maitrise_${id}`);
+      let obj = {};
+      if (existing) {
+        try {
+          JSON.parse(existing).forEach(c => { if (c.id) obj[c.id] = c.niveau_maitrise; });
+        } catch {}
+      }
+      masteryData.forEach(c => {
+        if (c.id) obj[c.id] = Math.max(obj[c.id]||0, c.niveau_maitrise);
+      });
+      const arr = Object.entries(obj).map(([id, niveau_maitrise]) => ({id, niveau_maitrise}));
+      localStorage.setItem(`maitrise_${id}`, JSON.stringify(arr));
+    }
+  }, [mode, questions, answers, id]);
+
   if(mode==="config") {
     return <TestConfig onStart={setConfig} cardCount={cards.length}/>
   }

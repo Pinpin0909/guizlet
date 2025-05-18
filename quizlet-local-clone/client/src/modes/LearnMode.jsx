@@ -41,9 +41,11 @@ export default function LearnMode() {
   const [q, setQ] = useState(null);
   const [error, setError] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
-  // Pour gestion des essais sur réponse écrite
   const [writtenTries, setWrittenTries] = useState(0);
   const MAX_WRITTEN_TRIES = 3;
+
+  // Correction: Ajout de l'état de transition
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   // Initialisation : charger, mélanger, init
   useEffect(() => {
@@ -167,13 +169,16 @@ export default function LearnMode() {
     setError(!correct);
     setWrittenTries(0);
 
+    // Correction : masquer la question pendant la transition
     if (q.type === "expose") {
       setError(false);
       setStepInSalve(s => s + 1);
     } else {
+      setIsTransitioning(true);
       setTimeout(() => {
         setError(false);
         setStepInSalve(s => s + 1);
+        setIsTransitioning(false);
       }, correct ? 350 : 1100);
     }
   }
@@ -193,71 +198,93 @@ export default function LearnMode() {
 
   // Passe à la salve suivante ou à la phase de révision finale
   function nextSalve() {
-    setAllCards(prev => prev.map(c => {
-      const cardInSalve = salve.find(s => s.id === c.id);
-      if (cardInSalve && c.derniere_bonne) {
-        return { ...c, erreurs_recentes: 0 };
-      }
-      return c;
-    }));
+    setAllCards(prev => {
+      const updated = prev.map(c => {
+        const cardInSalve = salve.find(s => s.id === c.id);
+        if (cardInSalve && c.derniere_bonne) {
+          return { ...c, erreurs_recentes: 0 };
+        }
+        return c;
+      });
 
-    const reste = allCards.filter(c => c.niveau_maitrise < 1.0 || c.statut !== "maitrisé");
-    if (reste.length === 0) {
-      setPhase("done");
-    } else if (allCards.every(c => c.salves_vues > 0)) {
-      setPhase("final");
-    } else {
-      setSalveNum(n => n + 1);
-    }
+      // Vérification effectuée avec les cartes mises à jour
+      const reste = updated.filter(c => c.niveau_maitrise < 1.0 || c.statut !== "maitrisé");
+      if (reste.length === 0) {
+        setPhase("done");
+      } else if (updated.every(c => c.salves_vues > 0)) {
+        setPhase("final");
+      } else {
+        setSalveNum(n => n + 1);
+      }
+      return updated;
+    });
   }
 
+  // Calcul des éléments faibles basé sur l'état actuel des cartes
   const elementsFaibles = allCards.filter(
     c => c.niveau_maitrise < 0.9 || c.erreurs > 0 || c.erreurs_recentes > 0
   );
 
   function finalAnswer(card, resp) {
     const correct = resp.trim().toLowerCase() === card.reponse.trim().toLowerCase();
-    setAllCards(prev => prev.map(c => {
-      if (c.id !== card.id) return c;
-      let new_niveau = c.niveau_maitrise;
-      let new_erreurs = c.erreurs;
-      let new_erreurs_recentes = c.erreurs_recentes;
+    setAllCards(prev => {
+      const updated = prev.map(c => {
+        if (c.id !== card.id) return c;
+        let new_niveau = c.niveau_maitrise;
+        let new_erreurs = c.erreurs;
+        let new_erreurs_recentes = c.erreurs_recentes;
+        if (correct) {
+          new_niveau = clamp(c.niveau_maitrise + 0.3, 0, 1.0);
+          new_erreurs_recentes = 0;
+        } else {
+          new_niveau = clamp(c.niveau_maitrise - 0.2, 0, 1.0);
+          new_erreurs = c.erreurs + 1;
+          new_erreurs_recentes = c.erreurs_recentes + 1;
+        }
+        let statut = "en_cours";
+        if (new_niveau >= 1.0 && correct && c.derniere_bonne && new_erreurs_recentes === 0) {
+          statut = "maitrisé";
+        }
+        return {
+          ...c,
+          niveau_maitrise: new_niveau,
+          erreurs: new_erreurs,
+          erreurs_recentes: new_erreurs_recentes,
+          statut,
+          avant_derniere_bonne: c.derniere_bonne,
+          derniere_bonne: correct
+        };
+      });
+      return updated;
+    });
 
-      if (correct) {
-        new_niveau = clamp(c.niveau_maitrise + 0.3, 0, 1.0);
-        new_erreurs_recentes = 0;
-      } else {
-        new_niveau = clamp(c.niveau_maitrise - 0.2, 0, 1.0);
-        new_erreurs = c.erreurs + 1;
-        new_erreurs_recentes = c.erreurs_recentes + 1;
-      }
-      let statut = "en_cours";
-      if (new_niveau >= 1.0 && correct && c.derniere_bonne && new_erreurs_recentes === 0) {
-        statut = "maitrisé";
-      }
-
-      return {
-        ...c,
-        niveau_maitrise: new_niveau,
-        erreurs: new_erreurs,
-        erreurs_recentes: new_erreurs_recentes,
-        statut,
-        avant_derniere_bonne: c.derniere_bonne,
-        derniere_bonne: correct
-      };
-    }));
-
+    setIsTransitioning(true);
     setTimeout(() => {
-      const resteFaibles = allCards.filter(
-        c => c.id !== card.id && (c.niveau_maitrise < 0.9 || c.erreurs > 0 || c.erreurs_recentes > 0)
-      );
-      if (resteFaibles.length === 0) {
-        setPhase("done");
-      } else {
-        setStepInSalve(s => s + 1);
-      }
+      setAllCards(currentCards => {
+        const resteFaibles = currentCards.filter(
+          c => c.id !== card.id && (c.niveau_maitrise < 0.9 || c.erreurs > 0 || c.erreurs_recentes > 0)
+        );
+        if (resteFaibles.length === 0) {
+          setPhase("done");
+        } else {
+          setStepInSalve(s => s + 1);
+        }
+        return currentCards;
+      });
+      setIsTransitioning(false);
     }, correct ? 350 : 1100);
   }
+
+  // Sauvegarde de la maîtrise après une session
+  useEffect(() => {
+    if (phase === "done" && allCards.length > 0) {
+      const masteryData = allCards.map(c => ({
+        id: c.id,
+        niveau_maitrise: c.niveau_maitrise
+      }));
+      localStorage.setItem(`maitrise_${id}`, JSON.stringify(masteryData));
+    }
+  }, [phase, allCards, id]);
 
   if (showIntro) {
     return (
@@ -345,34 +372,8 @@ export default function LearnMode() {
     );
   }
 
-  if (salveEnded && phase === "learn") {
-    const nbMaitrises = allCards.filter(c => c.statut === "maitrisé").length;
-    const nbEnCours = allCards.filter(c => c.statut === "en_cours").length;
-    const nbNouveaux = allCards.filter(c => c.statut === "nouveau").length;
-    return (
-      <div style={{textAlign: "center", marginTop: 60}}>
-        <h3>Fin de la salve {salveNum}</h3>
-        <div style={{margin: 16, fontSize: 17}}>
-          <b>{nbMaitrises}</b> maîtrisé{nbMaitrises>1?"s":""} / {allCards.length}
-        </div>
-        <div style={{display: "flex", justifyContent: "center", gap: 20, margin: "15px 0"}}>
-          <div>
-            <span style={{color: "#68d391", fontWeight: 600}}>{nbMaitrises}</span> maîtrisés
-          </div>
-          <div>
-            <span style={{color: "#f6e05e", fontWeight: 600}}>{nbEnCours}</span> en cours
-          </div>
-          <div>
-            <span style={{color: "#a0aec0", fontWeight: 600}}>{nbNouveaux}</span> nouveaux
-          </div>
-        </div>
-        <ProgressTable cards={allCards} />
-        <button onClick={nextSalve} style={{marginTop: 38}}>Salve suivante</button>
-      </div>
-    );
-  }
-
-  if (!q) return <div>Chargement…</div>;
+  // Correction : masquer la question entre deux étapes (transition)
+  if (!q || isTransitioning) return <div>Chargement…</div>;
 
   function renderImageFront(card) {
     if (card.imageFront) {
@@ -687,7 +688,11 @@ function FinalWrittenAnswer({answer, onCorrect, error, setError, onIDontKnow, tr
       <div style={{display: "flex", gap: 12}}>
         <button type="submit">Valider</button>
         {onIDontKnow &&
-          <button type="button" onClick={onIDontKnow} style={{background: "#fed7d7", color: "#822727"}}>
+          <button
+            type="button"
+            onClick={onIDontKnow}
+            style={{background: "#fed7d7", color: "#822727"}}
+          >
             Je ne sais pas
           </button>
         }
