@@ -44,6 +44,17 @@ Clone local de Quizlet : une application web éducative pour apprendre avec des 
 
 4. Accéder à [http://localhost:3000)
 
+**OU**
+
+1. **Executer QuizletLocalCloneSetup.exe**
+
+2. **Installer les dépendances**
+
+   ```bash
+   npm install
+
+3. **executé le racourci bureau**
+
 ## Structure du projet
 
 ```
